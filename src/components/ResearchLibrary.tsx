@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ResearchEntry, SdkpCategory } from '../types/research';
 import { useAuth } from '../firebase/authContext';
 import { 
@@ -18,7 +18,10 @@ import {
   ChevronDown,
   ChevronUp,
   GitBranch,
-  RefreshCw
+  RefreshCw,
+  X,
+  Tag,
+  Filter
 } from 'lucide-react';
 import { GithubCompilerModal } from './GithubCompilerModal';
 
@@ -83,20 +86,45 @@ export const ResearchLibrary: React.FC<ResearchLibraryProps> = ({
     }
   };
 
-  const filteredEntries = entries.filter((entry) => {
-    const matchesCategory = selectedCategory === 'ALL' || entry.category === selectedCategory;
+  const filteredEntries = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
-    if (!query) return matchesCategory;
+    const tokens = query.split(/\s+/).filter(Boolean);
 
-    const inTitle = entry.title.toLowerCase().includes(query);
-    const inSummary = entry.summary.toLowerCase().includes(query);
-    const inEquations = entry.equations?.toLowerCase().includes(query);
-    const inDataPoints = entry.dataPoints?.toLowerCase().includes(query);
-    const inDoi = entry.zenodoDoi?.toLowerCase().includes(query);
-    const inTags = entry.tags?.some(tag => tag.toLowerCase().includes(query));
+    return entries.filter((entry) => {
+      // 1. Category check
+      const matchesCategory = selectedCategory === 'ALL' || entry.category === selectedCategory;
+      if (!matchesCategory) return false;
 
-    return matchesCategory && (inTitle || inSummary || inEquations || inDataPoints || inDoi || inTags);
-  });
+      // If no search query, return all in category
+      if (tokens.length === 0) return true;
+
+      // 2. Comprehensive text & metadata index
+      const searchableFields = [
+        entry.title,
+        entry.summary,
+        entry.content,
+        entry.equations,
+        entry.dataPoints,
+        entry.category,
+        entry.authorEmail,
+        entry.zenodoDoi,
+        entry.osfId,
+        entry.gitRepo,
+        entry.xPostUrl,
+        entry.dcpSealHash,
+        entry.primeLock ? String(entry.primeLock) : '',
+        entry.mod9Harmonic ? `mod-${entry.mod9Harmonic} mod9 harmonic` : '',
+        entry.decoherenceScore ? String(entry.decoherenceScore) : '',
+        entry.createdAt,
+        ...(entry.tags || [])
+      ].filter(Boolean).map(s => String(s).toLowerCase());
+
+      const combinedIndex = searchableFields.join(' ');
+
+      // Every typed word/token must match at least one metadata or text field
+      return tokens.every((token) => combinedIndex.includes(token));
+    });
+  }, [entries, searchQuery, selectedCategory]);
 
   const handleCopySeal = (entry: ResearchEntry) => {
     const sealText = [
@@ -173,17 +201,26 @@ Ethically sealed under FatherTimes369v SDKP & DCP.
   return (
     <div className="space-y-6">
       {/* Search and Filters Header */}
-      <div className="rounded-2xl border border-cyan-900/40 bg-slate-900/60 p-5 shadow-xl backdrop-blur-sm">
+      <div className="rounded-2xl border border-cyan-900/40 bg-slate-900/60 p-5 shadow-xl backdrop-blur-sm space-y-3.5">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search research by title, equation, data point, Zenodo DOI, or tag..."
-              className="w-full rounded-xl border border-slate-700/80 bg-slate-950/80 pl-10 pr-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 font-mono"
+              className="w-full rounded-xl border border-slate-700/80 bg-slate-950/80 pl-10 pr-10 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 font-mono shadow-inner transition-all"
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1 rounded-md transition-colors cursor-pointer"
+                title="Clear search query"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -215,15 +252,56 @@ Ethically sealed under FatherTimes369v SDKP & DCP.
           </div>
         </div>
 
+        {/* Real-time Quick Filter Chips */}
+        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+          <span className="text-[11px] font-mono text-slate-400 flex items-center gap-1 mr-1">
+            <Tag className="h-3 w-3 text-cyan-400" />
+            <span>Quick search:</span>
+          </span>
+          {['Kapnack', 'Mod-9', '104729', 'Zero-Drift', 'Zenodo', 'Equations', 'Decoherence', 'DCP-v3.6.9'].map((tag) => {
+            const isActive = searchQuery.toLowerCase().includes(tag.toLowerCase());
+            return (
+              <button
+                key={tag}
+                onClick={() => {
+                  if (isActive) {
+                    setSearchQuery((prev) => prev.replace(new RegExp(`\\b${tag}\\b`, 'gi'), '').trim());
+                  } else {
+                    setSearchQuery((prev) => prev ? `${prev} ${tag}` : tag);
+                  }
+                }}
+                className={`rounded-lg px-2.5 py-1 text-[11px] font-mono transition-all cursor-pointer border ${
+                  isActive
+                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 font-bold'
+                    : 'bg-slate-950/80 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700'
+                }`}
+              >
+                {isActive ? `✓ ${tag}` : `+${tag}`}
+              </button>
+            );
+          })}
+          {(searchQuery || selectedCategory !== 'ALL') && (
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedCategory('ALL');
+              }}
+              className="rounded-lg bg-rose-950/40 border border-rose-800/60 px-2 py-1 text-[11px] font-mono text-rose-300 hover:bg-rose-900/50 cursor-pointer ml-auto"
+            >
+              Reset All Filters
+            </button>
+          )}
+        </div>
+
         {compileMessage && (
-          <div className="mt-3 p-3 rounded-xl bg-cyan-950/60 border border-cyan-800 text-xs font-mono text-cyan-200 flex items-center gap-2">
+          <div className="p-3 rounded-xl bg-cyan-950/60 border border-cyan-800 text-xs font-mono text-cyan-200 flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-emerald-400 flex-shrink-0" />
             <span>{compileMessage}</span>
           </div>
         )}
 
         {/* Categories Bar */}
-        <div className="mt-4 flex flex-wrap gap-1.5 pt-2 border-t border-slate-800/80">
+        <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-800/80">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.value}
@@ -241,15 +319,46 @@ Ethically sealed under FatherTimes369v SDKP & DCP.
       </div>
 
       {/* Results Header */}
-      <div className="flex items-center justify-between px-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
         <div className="text-xs font-mono text-slate-400">
-          Showing <span className="text-cyan-400 font-semibold">{filteredEntries.length}</span> verified deterministic research records
+          Showing <span className="text-cyan-400 font-semibold">{filteredEntries.length}</span> of {entries.length} verified deterministic research records
+          {searchQuery && (
+            <span className="text-slate-300 ml-2">
+              matching <span className="text-cyan-300 bg-cyan-950/80 px-1.5 py-0.5 rounded border border-cyan-800/60 font-semibold">&ldquo;{searchQuery}&rdquo;</span>
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2 text-[11px] font-mono text-slate-500">
           <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-          <span>DCP Cryptographic Verification: Active</span>
+          <span>Real-time Search: Active</span>
         </div>
       </div>
+
+      {/* Empty State when no entries match */}
+      {filteredEntries.length === 0 && (
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-12 text-center space-y-4">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-950/50 border border-cyan-800/50 text-cyan-400">
+            <Search className="h-6 w-6" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-sm font-bold font-mono text-slate-200">
+              No research entries found
+            </h3>
+            <p className="text-xs font-mono text-slate-400 max-w-md mx-auto">
+              No records match your query {searchQuery ? `"${searchQuery}"` : ''} in the selected category. Try adjusting terms, equations, or clearing filters.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setSearchQuery('');
+              setSelectedCategory('ALL');
+            }}
+            className="rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-2 text-xs font-mono font-semibold text-white shadow-md hover:from-cyan-500 hover:to-blue-500 cursor-pointer"
+          >
+            Clear Search &amp; Show All Records
+          </button>
+        </div>
+      )}
 
       {/* Research Grid */}
       <div className="grid grid-cols-1 gap-5">
@@ -342,6 +451,22 @@ Ethically sealed under FatherTimes369v SDKP & DCP.
                   <div className="rounded-xl border border-slate-800/80 bg-slate-950/50 p-4 text-xs text-slate-300 leading-relaxed">
                     <h4 className="font-semibold text-cyan-300 mb-2 font-mono">Full Research Derivation</h4>
                     <p className="whitespace-pre-line text-slate-300">{entry.content}</p>
+                  </div>
+                )}
+
+                {/* Tags with click-to-filter */}
+                {entry.tags && entry.tags.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    {entry.tags.map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => setSearchQuery(tag)}
+                        className="rounded-md bg-cyan-950/40 border border-cyan-800/40 px-2 py-0.5 text-[10px] font-mono text-cyan-300 hover:bg-cyan-900/60 hover:border-cyan-600 cursor-pointer transition-colors"
+                        title={`Filter by tag: ${tag}`}
+                      >
+                        #{tag}
+                      </button>
+                    ))}
                   </div>
                 )}
 

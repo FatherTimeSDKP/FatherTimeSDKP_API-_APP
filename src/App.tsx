@@ -15,6 +15,9 @@ import { AddResearchModal } from './components/AddResearchModal';
 import { ApiExplorer } from './components/ApiExplorer';
 import { DcpNetworkTopology } from './components/DcpNetworkTopology';
 import { CommercialHub } from './components/CommercialHub';
+import { GoogleDriveHub } from './components/GoogleDriveHub';
+import { CrossChainDeFiHub } from './components/CrossChainDeFiHub';
+import { GoogleClassroomHub } from './components/GoogleClassroomHub';
 import { 
   Atom, 
   ExternalLink, 
@@ -27,12 +30,15 @@ import {
   Network,
   ChevronDown,
   ChevronUp,
-  DollarSign
+  DollarSign,
+  Cloud,
+  GitMerge,
+  GraduationCap
 } from 'lucide-react';
 
 function MainAppContent() {
   const { user, isAdmin, loading: authLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState<'library' | 'topology' | 'solvers' | 'falsification' | 'maintainer' | 'platforms' | 'apis' | 'commercial'>('library');
+  const [activeTab, setActiveTab] = useState<'library' | 'topology' | 'solvers' | 'falsification' | 'maintainer' | 'platforms' | 'apis' | 'commercial' | 'drive' | 'crosschain' | 'classroom'>('library');
   const [researchEntries, setResearchEntries] = useState<ResearchEntry[]>(INITIAL_RESEARCH_ENTRIES);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [firestoreSyncStatus, setFirestoreSyncStatus] = useState<'syncing' | 'connected' | 'offline'>('syncing');
@@ -301,6 +307,11 @@ function MainAppContent() {
 
         {activeTab === 'commercial' && <CommercialHub />}
 
+        {activeTab === 'drive' && <GoogleDriveHub researchEntries={researchEntries} />}
+
+        {activeTab === 'crosschain' && <CrossChainDeFiHub />}
+
+        {activeTab === 'classroom' && <GoogleClassroomHub researchEntries={researchEntries} />}
       </main>
 
       {/* Footer */}

@@ -13,12 +13,15 @@ import {
   Cpu,
   Terminal,
   Network,
-  DollarSign
+  DollarSign,
+  Cloud,
+  GitMerge,
+  GraduationCap
 } from 'lucide-react';
 
 interface NavbarProps {
-  activeTab: 'library' | 'topology' | 'solvers' | 'falsification' | 'maintainer' | 'platforms' | 'apis' | 'commercial';
-  setActiveTab: (tab: 'library' | 'topology' | 'solvers' | 'falsification' | 'maintainer' | 'platforms' | 'apis' | 'commercial') => void;
+  activeTab: 'library' | 'topology' | 'solvers' | 'falsification' | 'maintainer' | 'platforms' | 'apis' | 'commercial' | 'drive' | 'crosschain' | 'classroom';
+  setActiveTab: (tab: 'library' | 'topology' | 'solvers' | 'falsification' | 'maintainer' | 'platforms' | 'apis' | 'commercial' | 'drive' | 'crosschain' | 'classroom') => void;
   onOpenAddModal: () => void;
   researchCount: number;
 }
@@ -165,6 +168,42 @@ export const Navbar: React.FC<NavbarProps> = ({
               $29+
             </span>
           </button>
+
+          <button
+            onClick={() => setActiveTab('drive')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              activeTab === 'drive'
+                ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+            }`}
+          >
+            <Cloud className="h-3.5 w-3.5 text-blue-400" />
+            <span>Google Drive &amp; Docs</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('crosschain')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              activeTab === 'crosschain'
+                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+            }`}
+          >
+            <GitMerge className="h-3.5 w-3.5 text-purple-400" />
+            <span>Cross-Chain DeFi</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('classroom')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              activeTab === 'classroom'
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+            }`}
+          >
+            <GraduationCap className="h-3.5 w-3.5 text-emerald-400" />
+            <span>Google Classroom</span>
+          </button>
         </nav>
 
         {/* Action Controls & Auth */}
@@ -283,6 +322,30 @@ export const Navbar: React.FC<NavbarProps> = ({
           }`}
         >
           Consulting &amp; Pricing ($)
+        </button>
+        <button
+          onClick={() => setActiveTab('drive')}
+          className={`flex-shrink-0 px-2.5 py-1 text-xs rounded-md ${
+            activeTab === 'drive' ? 'bg-blue-500/20 text-blue-300 font-semibold' : 'text-slate-400'
+          }`}
+        >
+          Google Drive &amp; Docs
+        </button>
+        <button
+          onClick={() => setActiveTab('crosschain')}
+          className={`flex-shrink-0 px-2.5 py-1 text-xs rounded-md ${
+            activeTab === 'crosschain' ? 'bg-purple-500/20 text-purple-300 font-semibold' : 'text-slate-400'
+          }`}
+        >
+          Cross-Chain DeFi
+        </button>
+        <button
+          onClick={() => setActiveTab('classroom')}
+          className={`flex-shrink-0 px-2.5 py-1 text-xs rounded-md ${
+            activeTab === 'classroom' ? 'bg-emerald-500/20 text-emerald-300 font-semibold' : 'text-slate-400'
+          }`}
+        >
+          Google Classroom
         </button>
       </div>
     </header>

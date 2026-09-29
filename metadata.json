@@ -1,0 +1,6 @@
+{
+  "name": "FatherTimeSDKP & Digital Crystal Research Hub",
+  "description": "Unified deterministic research suite, equations, live solvers, and repository archive for FatherTimeSDKP and Digital Crystal Protocol with Zenodo, OSF, and X integrations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

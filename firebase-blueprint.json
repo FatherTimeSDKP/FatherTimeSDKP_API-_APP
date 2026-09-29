@@ -1,0 +1,242 @@
+{
+  "entities": {
+    "ResearchEntry": {
+      "title": "ResearchEntry",
+      "description": "A research record, mathematical derivation, or observational data document in the FatherTimeSDKP ecosystem.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the research entry",
+          "maxLength": 128
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the research document or breakthrough",
+          "maxLength": 200,
+          "minLength": 2
+        },
+        "category": {
+          "type": "string",
+          "description": "SDKP pillar category (e.g., SDKP-Core, SD-N, Dallas-Code, Kapnack, DCP, Falsification)",
+          "maxLength": 50
+        },
+        "summary": {
+          "type": "string",
+          "description": "Summary or abstract of the research findings",
+          "maxLength": 2000
+        },
+        "content": {
+          "type": "string",
+          "description": "Full research body or derivation text",
+          "maxLength": 10000
+        },
+        "equations": {
+          "type": "string",
+          "description": "Core equations (LaTeX or plaintext representation)",
+          "maxLength": 2000
+        },
+        "dataPoints": {
+          "type": "string",
+          "description": "Raw observational numbers, metrics, or table coordinates",
+          "maxLength": 4000
+        },
+        "authorUid": {
+          "type": "string",
+          "description": "UID of the author who created the research entry",
+          "maxLength": 128
+        },
+        "authorEmail": {
+          "type": "string",
+          "description": "Email address of the researcher",
+          "maxLength": 256
+        },
+        "gitRepo": {
+          "type": "string",
+          "description": "Target GitHub repository within FatherTimeSDKP org",
+          "maxLength": 200
+        },
+        "zenodoDoi": {
+          "type": "string",
+          "description": "Linked Zenodo DOI or Record ID (e.g. 10.5281/zenodo.18322841)",
+          "maxLength": 100
+        },
+        "osfId": {
+          "type": "string",
+          "description": "Linked Open Science Framework registration or project identifier",
+          "maxLength": 100
+        },
+        "xPostUrl": {
+          "type": "string",
+          "description": "Linked X post URL or public announcement timestamp",
+          "maxLength": 300
+        },
+        "dcpSealHash": {
+          "type": "string",
+          "description": "SHA-256 cryptographic provenance hash",
+          "maxLength": 64
+        },
+        "primeLock": {
+          "type": "number",
+          "description": "Prime lock number conforming to Dallas's Code"
+        },
+        "mod9Harmonic": {
+          "type": "number",
+          "description": "Mod-9 digital root harmonic (1-9)"
+        },
+        "decoherenceScore": {
+          "type": "number",
+          "description": "Decoherence stability benchmark (target 1.000000)"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when document was created"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when document was last modified"
+        }
+      },
+      "required": ["id", "title", "category", "authorUid", "authorEmail", "createdAt", "updatedAt"]
+    },
+    "DcpSeal": {
+      "title": "DcpSeal",
+      "description": "Cryptographic notarization block sealed under the Digital Crystal Protocol (DCP).",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Seal unique ID",
+          "maxLength": 128
+        },
+        "subject": {
+          "type": "string",
+          "description": "Subject or title of notarized asset",
+          "maxLength": 200
+        },
+        "sealHash": {
+          "type": "string",
+          "description": "SHA-256 digital crystal provenance hash",
+          "maxLength": 64
+        },
+        "primeLock": {
+          "type": "number",
+          "description": "Prime lock number"
+        },
+        "mod9Harmonic": {
+          "type": "number",
+          "description": "Digital root harmonic (1-9)"
+        },
+        "authorUid": {
+          "type": "string",
+          "description": "UID of the certifier",
+          "maxLength": 128
+        },
+        "authorEmail": {
+          "type": "string",
+          "description": "Email address of certifier",
+          "maxLength": 256
+        },
+        "zenodoDoi": {
+          "type": "string",
+          "description": "Associated Zenodo record",
+          "maxLength": 100
+        },
+        "osfId": {
+          "type": "string",
+          "description": "Associated OSF identifier",
+          "maxLength": 100
+        },
+        "xPostId": {
+          "type": "string",
+          "description": "Associated X announcement link or status ID",
+          "maxLength": 300
+        },
+        "gitCommitHash": {
+          "type": "string",
+          "description": "Linked Git commit SHA",
+          "maxLength": 64
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 sealing timestamp"
+        }
+      },
+      "required": ["id", "subject", "sealHash", "primeLock", "mod9Harmonic", "authorUid", "authorEmail", "timestamp"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Researcher profile and platform integration settings.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "User UID matching auth.uid",
+          "maxLength": 128
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name of researcher",
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address",
+          "maxLength": 256
+        },
+        "role": {
+          "type": "string",
+          "description": "Maintainer or Researcher role",
+          "maxLength": 50
+        },
+        "githubUser": {
+          "type": "string",
+          "description": "GitHub username or org handle",
+          "maxLength": 100
+        },
+        "zenodoAuthorId": {
+          "type": "string",
+          "description": "Zenodo author or record identifier",
+          "maxLength": 100
+        },
+        "osfUserId": {
+          "type": "string",
+          "description": "OSF User ID or registration profile",
+          "maxLength": 100
+        },
+        "xHandle": {
+          "type": "string",
+          "description": "X / Twitter handle",
+          "maxLength": 100
+        },
+        "zeroCrossingOffset": {
+          "type": "number",
+          "description": "Kapnack solver offset constant (default 0.1)"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last profile update timestamp"
+        }
+      },
+      "required": ["uid", "email", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/research_entries/{entryId}": {
+      "schema": "ResearchEntry",
+      "description": "Deterministic research logs, equations, data points, and falsification test cases."
+    },
+    "/dcp_seals/{sealId}": {
+      "schema": "DcpSeal",
+      "description": "Digital Crystal Protocol cryptographic provenance and ethical seals."
+    },
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile with platform handles and maintainer settings."
+    }
+  }
+}

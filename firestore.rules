@@ -1,0 +1,128 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'dallasnamiyadaddy@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Connection test document
+    match /test/{docId} {
+      allow read, write: if true;
+    }
+
+    // Admins collection (read-only for authenticated, write only by master admin)
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && request.auth.token.email == 'dallasnamiyadaddy@gmail.com';
+    }
+
+    // Validation for ResearchEntry
+    function isValidResearchEntry(data) {
+      return data.keys().hasAll(['id', 'title', 'category', 'authorUid', 'authorEmail', 'createdAt', 'updatedAt']) &&
+        data.id is string && isValidId(data.id) &&
+        data.title is string && data.title.size() >= 2 && data.title.size() <= 200 &&
+        data.category is string && data.category.size() <= 50 &&
+        data.authorUid is string && data.authorUid == request.auth.uid &&
+        data.authorEmail is string && data.authorEmail.size() <= 256 &&
+        data.createdAt is string && data.createdAt.size() <= 50 &&
+        data.updatedAt is string && data.updatedAt.size() <= 50 &&
+        (!('summary' in data) || (data.summary is string && data.summary.size() <= 2000)) &&
+        (!('content' in data) || (data.content is string && data.content.size() <= 10000)) &&
+        (!('equations' in data) || (data.equations is string && data.equations.size() <= 2000)) &&
+        (!('dataPoints' in data) || (data.dataPoints is string && data.dataPoints.size() <= 4000)) &&
+        (!('gitRepo' in data) || (data.gitRepo is string && data.gitRepo.size() <= 200)) &&
+        (!('zenodoDoi' in data) || (data.zenodoDoi is string && data.zenodoDoi.size() <= 100)) &&
+        (!('osfId' in data) || (data.osfId is string && data.osfId.size() <= 100)) &&
+        (!('xPostUrl' in data) || (data.xPostUrl is string && data.xPostUrl.size() <= 300)) &&
+        (!('dcpSealHash' in data) || (data.dcpSealHash is string && data.dcpSealHash.size() <= 64)) &&
+        (!('primeLock' in data) || (data.primeLock is number)) &&
+        (!('mod9Harmonic' in data) || (data.mod9Harmonic is number && data.mod9Harmonic >= 1 && data.mod9Harmonic <= 9)) &&
+        (!('decoherenceScore' in data) || (data.decoherenceScore is number));
+    }
+
+    // Research entries collection
+    match /research_entries/{entryId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(entryId) && entryId == incoming().id && isValidResearchEntry(incoming());
+      allow update: if isSignedIn() && isValidId(entryId) && isValidResearchEntry(incoming()) && (
+        isAdmin() || (existing().authorUid == request.auth.uid && incoming().authorUid == existing().authorUid && incoming().id == existing().id)
+      );
+      allow delete: if isSignedIn() && isValidId(entryId) && (
+        isAdmin() || existing().authorUid == request.auth.uid
+      );
+    }
+
+    // Validation for DcpSeal
+    function isValidDcpSeal(data) {
+      return data.keys().hasAll(['id', 'subject', 'sealHash', 'primeLock', 'mod9Harmonic', 'authorUid', 'authorEmail', 'timestamp']) &&
+        data.id is string && isValidId(data.id) &&
+        data.subject is string && data.subject.size() <= 200 &&
+        data.sealHash is string && data.sealHash.size() <= 64 &&
+        data.primeLock is number &&
+        data.mod9Harmonic is number && data.mod9Harmonic >= 1 && data.mod9Harmonic <= 9 &&
+        data.authorUid is string && data.authorUid == request.auth.uid &&
+        data.authorEmail is string && data.authorEmail.size() <= 256 &&
+        data.timestamp is string && data.timestamp.size() <= 50 &&
+        (!('zenodoDoi' in data) || (data.zenodoDoi is string && data.zenodoDoi.size() <= 100)) &&
+        (!('osfId' in data) || (data.osfId is string && data.osfId.size() <= 100)) &&
+        (!('xPostId' in data) || (data.xPostId is string && data.xPostId.size() <= 300)) &&
+        (!('gitCommitHash' in data) || (data.gitCommitHash is string && data.gitCommitHash.size() <= 64));
+    }
+
+    // Digital Crystal Protocol seals
+    match /dcp_seals/{sealId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(sealId) && sealId == incoming().id && isValidDcpSeal(incoming());
+      // Seals are immutable once created to ensure cryptographic provenance
+      allow update: if false;
+      allow delete: if isSignedIn() && (isAdmin() || existing().authorUid == request.auth.uid);
+    }
+
+    // User Profile
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['uid', 'email', 'updatedAt']) &&
+        data.uid is string && data.uid == request.auth.uid &&
+        data.email is string && data.email.size() <= 256 &&
+        data.updatedAt is string && data.updatedAt.size() <= 50 &&
+        (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100)) &&
+        (!('role' in data) || (data.role is string && data.role.size() <= 50)) &&
+        (!('githubUser' in data) || (data.githubUser is string && data.githubUser.size() <= 100)) &&
+        (!('zenodoAuthorId' in data) || (data.zenodoAuthorId is string && data.zenodoAuthorId.size() <= 100)) &&
+        (!('osfUserId' in data) || (data.osfUserId is string && data.osfUserId.size() <= 100)) &&
+        (!('xHandle' in data) || (data.xHandle is string && data.xHandle.size() <= 100)) &&
+        (!('zeroCrossingOffset' in data) || (data.zeroCrossingOffset is number));
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow create, update: if isSignedIn() && request.auth.uid == userId && isValidId(userId) && isValidUserProfile(incoming());
+      allow delete: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+    }
+  }
+}
